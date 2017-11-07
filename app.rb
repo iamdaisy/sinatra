@@ -2,6 +2,9 @@ require 'sinatra'
 require 'httparty'
 require 'nokogiri'
 require 'uri'
+require 'date'
+require 'csv'
+
 
 get '/' do 
     send_file 'index.html'
@@ -51,10 +54,8 @@ get '/lol' do
 end
 
 
- 
-
 get '/search' do
-    
+    # scraping code
     uri = "http://www.op.gg/summoner/userName="
     @id = params[:userName]
     keyword = URI.encode(@id)
@@ -63,6 +64,24 @@ get '/search' do
     @win = text.css('#SummonerLayoutContent > div.tabItem.Content.SummonerLayoutContent.summonerLayout-summary > div.SideContent > div.TierBox.Box > div.SummonerRatingMedium > div.TierRankInfo > div.TierInfo > span.WinLose > span.wins')
     @lose = text.css('#SummonerLayoutContent > div.tabItem.Content.SummonerLayoutContent.summonerLayout-summary > div.SideContent > div.TierBox.Box > div.SummonerRatingMedium > div.TierRankInfo > div.TierInfo > span.WinLose > span.losses') 
     
-    erb :search
     
+    # File.open("log.txt", "a+") do |f|
+    #     f.write("#{@id}, #{@win.text}, #{@lose.text}," + Time.now.to_s + "\n")
+    # end
+    
+    CSV.open('log.csv', 'a+') do |csv|
+        csv <<  [@id, @win.text, @lose.text, Time.now.to_s]
+        
+    end
+    
+    
+    erb :search  #가장 마지막에 있어야함
+end
+
+get '/log' do
+    @log = []
+    CSV.foreach('log.csv') do |row|
+        @log << row
+    end
+    erb :log
 end
